@@ -66,7 +66,7 @@ export class CameraControls extends EventDispatcher {
 	 * ```
 	 *
 	 * Note: If you do not wish to use enter three.js to reduce file size(tree-shaking for example), make a subset to install.
-	 *
+	 * 注意: 如果你不希望使用加载 three.js来减少文件大小(例如摇树)，可以使用以下方式创建一个子集来安装。
 	 * ```js
 	 * import {
 	 * 	Vector2,
@@ -98,16 +98,17 @@ export class CameraControls extends EventDispatcher {
 	 * };
 
 	 * CameraControls.install( { THREE: subsetOfTHREE } );
+	 * 将 THREEJS api 注入到 CameraControls 中，这样你就可以在 CameraControls 使用 threejs 提供的 api 了。
 	 * ```
 	 * @category Statics
 	 */
 	static install( libs: { THREE: THREESubset } ): void {
 
 		THREE = libs.THREE;
-		_ORIGIN = Object.freeze( new THREE.Vector3( 0, 0, 0 ) );
-		_AXIS_Y = Object.freeze( new THREE.Vector3( 0, 1, 0 ) );
-		_AXIS_Z = Object.freeze( new THREE.Vector3( 0, 0, 1 ) );
-		_v2 = new THREE.Vector2();
+		_ORIGIN = Object.freeze( new THREE.Vector3( 0, 0, 0 ) ); // 原点
+		_AXIS_Y = Object.freeze( new THREE.Vector3( 0, 1, 0 ) ); // y轴
+		_AXIS_Z = Object.freeze( new THREE.Vector3( 0, 0, 1 ) ); // z轴
+		_v2 = new THREE.Vector2(); // 二维向量
 		_v3A = new THREE.Vector3();
 		_v3B = new THREE.Vector3();
 		_v3C = new THREE.Vector3();
@@ -116,20 +117,21 @@ export class CameraControls extends EventDispatcher {
 		_zColumn = new THREE.Vector3();
 		_deltaTarget = new THREE.Vector3();
 		_deltaOffset = new THREE.Vector3();
-		_sphericalA = new THREE.Spherical();
+		_sphericalA = new THREE.Spherical(); // 球坐标
 		_sphericalB = new THREE.Spherical();
-		_box3A = new THREE.Box3();
+		_box3A = new THREE.Box3(); // 三维盒子
 		_box3B = new THREE.Box3();
 		_sphere = new THREE.Sphere();
-		_quaternionA = new THREE.Quaternion();
+		_quaternionA = new THREE.Quaternion(); // 四元数
 		_quaternionB = new THREE.Quaternion();
-		_rotationMatrix = new THREE.Matrix4();
-		_raycaster = new THREE.Raycaster();
+		_rotationMatrix = new THREE.Matrix4(); // 矩阵
+		_raycaster = new THREE.Raycaster(); // 射线
 
 	}
 
 	/**
 	 * list all ACTIONs
+	 * 列出所有动作
 	 * @category Statics
 	 */
 	static get ACTION(): typeof ACTION {
@@ -149,7 +151,7 @@ export class CameraControls extends EventDispatcher {
 	 * ```
 	 * @category Properties
 	 */
-	minPolarAngle = 0; // radians
+	minPolarAngle = 0; // radians // 最小垂直角度
 
 	/**
 	 * Maximum vertical angle in radians.  
@@ -162,7 +164,7 @@ export class CameraControls extends EventDispatcher {
 	 * ```
 	 * @category Properties
 	 */
-	maxPolarAngle = Math.PI; // radians
+	maxPolarAngle = Math.PI; // radians // 最大垂直角度
 
 	/**
 	 * Minimum horizontal angle in radians.  
@@ -175,7 +177,7 @@ export class CameraControls extends EventDispatcher {
 	 * ```
 	 * @category Properties
 	 */
-	minAzimuthAngle = - Infinity; // radians
+	minAzimuthAngle = - Infinity; // radians // 最小水平角度
 
 	/**
 	 * Maximum horizontal angle in radians.  
@@ -188,7 +190,7 @@ export class CameraControls extends EventDispatcher {
 	 * ```
 	 * @category Properties
 	 */
-	maxAzimuthAngle = Infinity; // radians
+	maxAzimuthAngle = Infinity; // radians // 最大水平角度
 
 	// How far you can dolly in and out ( PerspectiveCamera only )
 	/**
@@ -196,7 +198,7 @@ export class CameraControls extends EventDispatcher {
 	 * PerspectiveCamera only.
 	 * @category Properties
 	 */
-	minDistance = 0;
+	minDistance = 0; // PerspectiveCamera only
 	/**
 	 * Maximum distance for dolly. The value must be higher than `minDistance`.  
 	 * PerspectiveCamera only.
