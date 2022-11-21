@@ -1,4 +1,4 @@
-import * as _THREE from 'three';
+import type * as _THREE from 'three';
 import { THREESubset, ACTION, PointerInput, MouseButtons, Touches, FitToOptions, CameraControlsEventMap } from './types';
 import { EventDispatcher } from './EventDispatcher';
 export declare class CameraControls extends EventDispatcher {
@@ -11,7 +11,7 @@ export declare class CameraControls extends EventDispatcher {
      * ```
      *
      * Note: If you do not wish to use enter three.js to reduce file size(tree-shaking for example), make a subset to install.
-     *
+     * 注意: 如果你不希望使用加载 three.js来减少文件大小(例如摇树)，可以使用以下方式创建一个子集来安装。
      * ```js
      * import {
      * 	Vector2,
@@ -43,17 +43,19 @@ export declare class CameraControls extends EventDispatcher {
      * };
 
      * CameraControls.install( { THREE: subsetOfTHREE } );
+     * 将 THREEJS api 注入到 CameraControls 中，这样你就可以在 CameraControls 使用 threejs 提供的 api 了。
      * ```
      * @category Statics
      */
     static install(libs: {
         THREE: THREESubset;
     }): void;
-    /*
-    * list all ACTIONs
-    * @category Statics
-    */
-    static readonly ACTION: typeof ACTION;
+    /**
+     * list all ACTIONs
+     * 列出所有动作
+     * @category Statics
+     */
+    static get ACTION(): typeof ACTION;
     /**
      * Minimum vertical angle in radians.
      * The angle has to be between `0` and `.maxPolarAngle` inclusive.
@@ -190,7 +192,9 @@ export declare class CameraControls extends EventDispatcher {
     restThreshold: number;
     /**
      * An array of Meshes to collide with camera.
+     * 一个网格阵列与相机碰撞。
      * Be aware colliderMeshes may decrease performance. The collision test uses 4 raycasters from the camera since the near plane has 4 corners.
+     * 注意collidermesh可能会降低性能。碰撞测试使用摄像机的4个光线投射器，因为近平面有4个角。
      * @category Properties
      */
     colliderMeshes: _THREE.Object3D[];
@@ -255,12 +259,7 @@ export declare class CameraControls extends EventDispatcher {
     protected _focalOffset0: _THREE.Vector3;
     protected _dollyControlAmount: number;
     protected _dollyControlCoord: _THREE.Vector2;
-    protected _nearPlaneCorners: [
-        _THREE.Vector3,
-        _THREE.Vector3,
-        _THREE.Vector3,
-        _THREE.Vector3
-    ];
+    protected _nearPlaneCorners: [_THREE.Vector3, _THREE.Vector3, _THREE.Vector3, _THREE.Vector3];
     protected _hasRested: boolean;
     protected _boundary: _THREE.Box3;
     protected _boundaryEnclosesCamera: boolean;
@@ -285,51 +284,57 @@ export declare class CameraControls extends EventDispatcher {
      * @param domElement A `HTMLElement` for the draggable area, usually `renderer.domElement`.
      * @category Constructor
      */
-    constructor(camera: _THREE.PerspectiveCamera | _THREE.OrthographicCamera, domElement: HTMLElement);
-    /*
-    * The camera to be controlled
-    * @category Properties
-    */
-    camera: _THREE.PerspectiveCamera | _THREE.OrthographicCamera;
-    /*
-    * Whether or not the controls are enabled.
-    * `false` to disable user dragging/touch-move, but all methods works.
-    * @category Properties
-    */
-    enabled: boolean;
-    /*
-    * Returns `true` if the controls are active updating.
-    * readonly value.
-    * @category Properties
-    */
-    readonly active: boolean;
-    /*
-    * Getter for the current `ACTION`.
-    * readonly value.
-    * @category Properties
-    */
-    readonly currentAction: ACTION;
-    /*
-    * get/set Current distance.
-    * @category Properties
-    */
-    distance: number;
-    /*
-    * get/set the azimuth angle (horizontal) in radians.
-    * Every 360 degrees turn is added to `.azimuthAngle` value, which is accumulative.
-    * @category Properties
-    */
-    azimuthAngle: number;
-    /*
-    * get/set the polar angle (vertical) in radians.
-    * @category Properties
-    */
-    polarAngle: number;
-    /*
-    * Whether camera position should be enclosed in the boundary or not.
-    * @category Properties
-    */
-    boundaryEnclosesCamera: boolean;
+    constructor(camera: _THREE.PerspectiveCamera | _THREE.OrthographicCamera, domElement: HTMLElement, scene?: _THREE.Scene);
+    /**
+     * The camera to be controlled
+     * @category Properties
+     */
+    get camera(): _THREE.PerspectiveCamera | _THREE.OrthographicCamera;
+    set camera(camera: _THREE.PerspectiveCamera | _THREE.OrthographicCamera);
+    /**
+     * Whether or not the controls are enabled.
+     * `false` to disable user dragging/touch-move, but all methods works.
+     * @category Properties
+     */
+    get enabled(): boolean;
+    set enabled(enabled: boolean);
+    /**
+     * Returns `true` if the controls are active updating.
+     * readonly value.
+     * @category Properties
+     */
+    get active(): boolean;
+    /**
+     * Getter for the current `ACTION`.
+     * readonly value.
+     * @category Properties
+     */
+    get currentAction(): ACTION;
+    /**
+     * get/set Current distance.
+     * @category Properties
+     */
+    get distance(): number;
+    set distance(distance: number);
+    /**
+     * get/set the azimuth angle (horizontal) in radians.
+     * Every 360 degrees turn is added to `.azimuthAngle` value, which is accumulative.
+     * @category Properties
+     */
+    get azimuthAngle(): number;
+    set azimuthAngle(azimuthAngle: number);
+    /**
+     * get/set the polar angle (vertical) in radians.
+     * @category Properties
+     */
+    get polarAngle(): number;
+    set polarAngle(polarAngle: number);
+    /**
+     * Whether camera position should be enclosed in the boundary or not.
+     * @category Properties
+     */
+    get boundaryEnclosesCamera(): boolean;
+    set boundaryEnclosesCamera(boundaryEnclosesCamera: boolean);
     /**
      * Adds the specified event listener.
      * Applicable event types (which is `K`) are:
@@ -345,8 +350,12 @@ export declare class CameraControls extends EventDispatcher {
      * | `'sleep'`           | When the camera end moving. |
      *
      * 1. `mouseButtons.wheel` (Mouse wheel control) does not emit `'controlstart'` and `'controlend'`. `mouseButtons.wheel` uses scroll-event internally, and scroll-event happens intermittently. That means "start" and "end" cannot be detected.
+     * 1. `mouseButtons.wheel`(鼠标滚轮控制)不会触发`controlstart`和`controlend`,
+     *    `mouseButtons.Wheel` 内部使用滚动事件，并且滚动事件间歇性发生。这意味着“开始”和“结束”不能被检测到。
      * 2. Due to damping, `sleep` will usually fire a few seconds after the camera _appears_ to have stopped moving. If you want to do something (e.g. enable UI, perform another transition) at the point when the camera has stopped, you probably want the `rest` event. This can be fine tuned using the `.restThreshold` parameter. See the [Rest and Sleep Example](https://yomotsu.github.io/camera-controls/examples/rest-and-sleep.html).
-     *
+     *    由于阻尼，`sleep`通常会在相机看起来停止移动几秒钟后启动，如果你想在相机停止时做一些事情(例如启用UI，执行另一个过渡)，
+     *    你可能需要`rest`事件。可以使用`进行微调。restThreshold”参数。
+     *    参见[休息和睡眠示例](https://yomotsu.github.io/camera-controls/examples/rest-and-sleep.html)。
      * e.g.
      * ```
      * cameraControl.addEventListener( 'controlstart', myCallbackFunction );

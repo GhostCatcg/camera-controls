@@ -39,7 +39,7 @@ function isOrthographicCamera(camera) {
 const PI_2 = Math.PI * 2;
 const PI_HALF = Math.PI / 2;
 
-const EPSILON = 1e-5;
+const EPSILON = 1e-5; // 极限 1乘以10的负5次幂。就是0.00001
 function approxZero(number, error = EPSILON) {
     return Math.abs(number) < error;
 }
@@ -207,7 +207,7 @@ class CameraControls extends EventDispatcher {
      * @param domElement A `HTMLElement` for the draggable area, usually `renderer.domElement`.
      * @category Constructor
      */
-    constructor(camera, domElement) {
+    constructor(camera, domElement, scene) {
         super();
         /**
          * Minimum vertical angle in radians.
@@ -220,7 +220,7 @@ class CameraControls extends EventDispatcher {
          * ```
          * @category Properties
          */
-        this.minPolarAngle = 0; // radians
+        this.minPolarAngle = 0; // radians // 最小垂直角度
         /**
          * Maximum vertical angle in radians.
          * The angle has to be between `.maxPolarAngle` and `Math.PI` inclusive.
@@ -232,7 +232,7 @@ class CameraControls extends EventDispatcher {
          * ```
          * @category Properties
          */
-        this.maxPolarAngle = Math.PI; // radians
+        this.maxPolarAngle = Math.PI; // radians // 最大垂直角度
         /**
          * Minimum horizontal angle in radians.
          * The angle has to be less than `.maxAzimuthAngle`.
@@ -244,7 +244,7 @@ class CameraControls extends EventDispatcher {
          * ```
          * @category Properties
          */
-        this.minAzimuthAngle = -Infinity; // radians
+        this.minAzimuthAngle = -Infinity; // radians // 最小水平角度
         /**
          * Maximum horizontal angle in radians.
          * The angle has to be greater than `.minAzimuthAngle`.
@@ -256,14 +256,14 @@ class CameraControls extends EventDispatcher {
          * ```
          * @category Properties
          */
-        this.maxAzimuthAngle = Infinity; // radians
+        this.maxAzimuthAngle = Infinity; // radians // 最大水平角度
         // How far you can dolly in and out ( PerspectiveCamera only )
         /**
          * Minimum distance for dolly. The value must be higher than `0`.
          * PerspectiveCamera only.
          * @category Properties
          */
-        this.minDistance = 0;
+        this.minDistance = 0; // PerspectiveCamera only
         /**
          * Maximum distance for dolly. The value must be higher than `minDistance`.
          * PerspectiveCamera only.
@@ -346,7 +346,9 @@ class CameraControls extends EventDispatcher {
         this.restThreshold = 0.01;
         /**
          * An array of Meshes to collide with camera.
+         * 一个网格阵列与相机碰撞。
          * Be aware colliderMeshes may decrease performance. The collision test uses 4 raycasters from the camera since the near plane has 4 corners.
+         * 注意collidermesh可能会降低性能。碰撞测试使用摄像机的4个光线投射器，因为近平面有4个角。
          * @category Properties
          */
         this.colliderMeshes = [];
@@ -431,6 +433,10 @@ class CameraControls extends EventDispatcher {
             }
             return;
         };
+        if (scene) {
+            const axesHelper = new THREE.AxesHelper(5);
+            scene.add(axesHelper);
+        }
         // Check if the user has installed THREE
         if (typeof THREE === 'undefined') {
             console.error('camera-controls: `THREE` is undefined. You must first run `CameraControls.install( { THREE: THREE } )`. Check the docs for further information.');
@@ -449,8 +455,18 @@ class CameraControls extends EventDispatcher {
         this._focalOffset = new THREE.Vector3();
         this._focalOffsetEnd = this._focalOffset.clone();
         // rotation
+        // _spherical 球坐标 使用了相机的坐标还有 y 朝上的功能
         this._spherical = new THREE.Spherical().setFromVector3(_v3A.copy(this._camera.position).applyQuaternion(this._yAxisUpSpace));
         this._sphericalEnd = this._spherical.clone();
+        console.log(this._spherical, "spherical");
+        console.log(this._sphericalEnd, 'sphericalEnd');
+        if (scene) {
+            // const sphere = new Mesh(this._spherical)
+            // const sphere = new Mesh(this._spherical)
+            const sphere = new THREE.Mesh(new THREE.SphereGeometry(this._spherical.radius, 5, 5), new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true }));
+            scene.add(sphere);
+            // scene.add( this._sphericalEnd );
+        }
         this._zoom = this._camera.zoom;
         this._zoomEnd = this._zoom;
         // collisionTest uses nearPlane.s
@@ -889,7 +905,7 @@ class CameraControls extends EventDispatcher {
      * ```
      *
      * Note: If you do not wish to use enter three.js to reduce file size(tree-shaking for example), make a subset to install.
-     *
+     * 注意: 如果你不希望使用加载 three.js来减少文件大小(例如摇树)，可以使用以下方式创建一个子集来安装。
      * ```js
      * import {
      * 	Vector2,
@@ -921,15 +937,16 @@ class CameraControls extends EventDispatcher {
      * };
 
      * CameraControls.install( { THREE: subsetOfTHREE } );
+     * 将 THREEJS api 注入到 CameraControls 中，这样你就可以在 CameraControls 使用 threejs 提供的 api 了。
      * ```
      * @category Statics
      */
     static install(libs) {
         THREE = libs.THREE;
-        _ORIGIN = Object.freeze(new THREE.Vector3(0, 0, 0));
-        _AXIS_Y = Object.freeze(new THREE.Vector3(0, 1, 0));
-        _AXIS_Z = Object.freeze(new THREE.Vector3(0, 0, 1));
-        _v2 = new THREE.Vector2();
+        _ORIGIN = Object.freeze(new THREE.Vector3(0, 0, 0)); // 原点
+        _AXIS_Y = Object.freeze(new THREE.Vector3(0, 1, 0)); // y轴
+        _AXIS_Z = Object.freeze(new THREE.Vector3(0, 0, 1)); // z轴
+        _v2 = new THREE.Vector2(); // 二维向量
         _v3A = new THREE.Vector3();
         _v3B = new THREE.Vector3();
         _v3C = new THREE.Vector3();
@@ -938,18 +955,19 @@ class CameraControls extends EventDispatcher {
         _zColumn = new THREE.Vector3();
         _deltaTarget = new THREE.Vector3();
         _deltaOffset = new THREE.Vector3();
-        _sphericalA = new THREE.Spherical();
+        _sphericalA = new THREE.Spherical(); // 球坐标
         _sphericalB = new THREE.Spherical();
-        _box3A = new THREE.Box3();
+        _box3A = new THREE.Box3(); // 三维盒子
         _box3B = new THREE.Box3();
         _sphere = new THREE.Sphere();
-        _quaternionA = new THREE.Quaternion();
+        _quaternionA = new THREE.Quaternion(); // 四元数
         _quaternionB = new THREE.Quaternion();
-        _rotationMatrix = new THREE.Matrix4();
-        _raycaster = new THREE.Raycaster();
+        _rotationMatrix = new THREE.Matrix4(); // 矩阵
+        _raycaster = new THREE.Raycaster(); // 射线
     }
     /**
      * list all ACTIONs
+     * 列出所有动作
      * @category Statics
      */
     static get ACTION() {
@@ -1081,8 +1099,12 @@ class CameraControls extends EventDispatcher {
      * | `'sleep'`           | When the camera end moving. |
      *
      * 1. `mouseButtons.wheel` (Mouse wheel control) does not emit `'controlstart'` and `'controlend'`. `mouseButtons.wheel` uses scroll-event internally, and scroll-event happens intermittently. That means "start" and "end" cannot be detected.
+     * 1. `mouseButtons.wheel`(鼠标滚轮控制)不会触发`controlstart`和`controlend`,
+     *    `mouseButtons.Wheel` 内部使用滚动事件，并且滚动事件间歇性发生。这意味着“开始”和“结束”不能被检测到。
      * 2. Due to damping, `sleep` will usually fire a few seconds after the camera _appears_ to have stopped moving. If you want to do something (e.g. enable UI, perform another transition) at the point when the camera has stopped, you probably want the `rest` event. This can be fine tuned using the `.restThreshold` parameter. See the [Rest and Sleep Example](https://yomotsu.github.io/camera-controls/examples/rest-and-sleep.html).
-     *
+     *    由于阻尼，`sleep`通常会在相机看起来停止移动几秒钟后启动，如果你想在相机停止时做一些事情(例如启用UI，执行另一个过渡)，
+     *    你可能需要`rest`事件。可以使用`进行微调。restThreshold”参数。
+     *    参见[休息和睡眠示例](https://yomotsu.github.io/camera-controls/examples/rest-and-sleep.html)。
      * e.g.
      * ```
      * cameraControl.addEventListener( 'controlstart', myCallbackFunction );
@@ -1728,17 +1750,41 @@ class CameraControls extends EventDispatcher {
      * @category Methods
      */
     update(delta) {
+        // this._state 当前鼠标处于哪个 ACTION 状态
         const dampingFactor = this._state === ACTION.NONE ? this.dampingFactor : this.draggingDampingFactor;
+        // console.log( this.dampingFactor, '阻尼惯性' );
+        // console.log( this.draggingDampingFactor, '拖拽阻尼惯性' );
+        // console.log( '最后的阻尼惯性：dampingFactor', dampingFactor );
         // The original THREE.OrbitControls assume 60 FPS fixed and does NOT rely on delta time.
         // (that must be a problem of the original one though)
         // To to emulate the speed of the original one under 60 FPS, multiply `60` to delta,
         // but ours are more flexible to any FPS unlike the original.
+        // 原来的三个。OrbitControls假定60 FPS固定，不依赖增量时间。
+        // (这肯定是原始版本的问题)
+        // 为了模拟原始帧在60fps下的速度，将' 60 '乘以delta，
+        // 但是我们的FPS比原版更灵活。
+        // lerpRatio 差值必须小于1
         const lerpRatio = Math.min(dampingFactor * delta * 60, 1);
+        // console.log( lerpRatio, 'lerpRatio' );
+        // console.log( dampingFactor, 'dampingFactor' );
+        // console.log( delta, 'delta' );
+        // _spherical 球坐标公式
+        // _sphericalEnd 球坐标公式
+        // 为什么有两个球坐标公式？
+        // theta 差值
+        // phi 差值
         const deltaTheta = this._sphericalEnd.theta - this._spherical.theta;
         const deltaPhi = this._sphericalEnd.phi - this._spherical.phi;
+        // radius 差值
         const deltaRadius = this._sphericalEnd.radius - this._spherical.radius;
+        // console.log( deltaTheta, 'deltaTheta' );
+        // console.log( deltaPhi, 'deltaPhi' );
+        // console.log( deltaRadius, 'deltaRadius' );
+        // 两个向量相减 感觉这里有问题！
         const deltaTarget = _deltaTarget.subVectors(this._targetEnd, this._target);
         const deltaOffset = _deltaOffset.subVectors(this._focalOffsetEnd, this._focalOffset);
+        // approxZero 判断数据是否小于极限 1乘以10的负5次幂。就是0.00001
+        // 意思是针对上一帧，相机是否被修改
         if (!approxZero(deltaTheta) ||
             !approxZero(deltaPhi) ||
             !approxZero(deltaRadius) ||
@@ -1748,16 +1794,20 @@ class CameraControls extends EventDispatcher {
             !approxZero(deltaOffset.x) ||
             !approxZero(deltaOffset.y) ||
             !approxZero(deltaOffset.z)) {
+            // console.log( '被修改' );
             this._spherical.set(this._spherical.radius + deltaRadius * lerpRatio, this._spherical.phi + deltaPhi * lerpRatio, this._spherical.theta + deltaTheta * lerpRatio);
             this._target.add(deltaTarget.multiplyScalar(lerpRatio));
             this._focalOffset.add(deltaOffset.multiplyScalar(lerpRatio));
             this._needsUpdate = true;
         }
         else {
+            // console.log( '未被修改' );
             this._spherical.copy(this._sphericalEnd);
             this._target.copy(this._targetEnd);
             this._focalOffset.copy(this._focalOffsetEnd);
         }
+        // console.log( this._dollyControlAmount, '控制量：this._dollyControlAmount' );
+        // 滚鼠标可能会触发这个方法 还不知道这个是啥意思
         if (this._dollyControlAmount !== 0) {
             if (isPerspectiveCamera(this._camera)) {
                 const camera = this._camera;
@@ -1791,16 +1841,22 @@ class CameraControls extends EventDispatcher {
             }
             this._dollyControlAmount = 0;
         }
-        const maxDistance = this._collisionTest();
+        // 主要用来做相机碰撞物体的功能，详看 collision 案例，对其他功能不影响，可先不管
+        // 如果相机的位置有东西，则修改半径，让相机避开次物体
+        const maxDistance = this._collisionTest(); // Infinity
         this._spherical.radius = Math.min(this._spherical.radius, maxDistance);
         // decompose spherical to the camera position
-        this._spherical.makeSafe();
+        // 分解球形 给到 相机位置
+        this._spherical.makeSafe(); // 将极角 phi 的值限制在0.000001 和 π - 0.000001 之间
+        // setFromSpherical 从球坐标s中设置该向量。球坐标系(r，θ，baiφ)与直角坐标系(x，y，z)的转换关系du：x=rsinθcosφ；y=rsinθsinφ；z=rcosθ。
         this._camera.position.setFromSpherical(this._spherical).applyQuaternion(this._yAxisUpSpaceInverse).add(this._target);
         this._camera.lookAt(this._target);
         // set offset after the orbit movement
+        // 设置偏移后的轨道运动
         const affectOffset = !approxZero(this._focalOffset.x) ||
             !approxZero(this._focalOffset.y) ||
             !approxZero(this._focalOffset.z);
+        // 如果 focalOffset 有问题，才会走下面的方法
         if (affectOffset) {
             this._camera.updateMatrix();
             _xColumn.setFromMatrixColumn(this._camera.matrix, 0);
@@ -1812,12 +1868,15 @@ class CameraControls extends EventDispatcher {
             _v3A.copy(_xColumn).add(_yColumn).add(_zColumn);
             this._camera.position.add(_v3A);
         }
+        // 边界包围相机   moveTo 方法在使用
+        // 将相机也封闭在边界内   boundary.html 案例
         if (this._boundaryEnclosesCamera) {
             this._encloseToBoundary(this._camera.position.copy(this._target), _v3A.setFromSpherical(this._spherical).applyQuaternion(this._yAxisUpSpaceInverse), 1.0);
         }
         // zoom
         const deltaZoom = this._zoomEnd - this._zoom;
         this._zoom += deltaZoom * lerpRatio;
+        // 查看zoom是否被修改, deltaZoom, 暂时没有需求修改zoom
         if (this._camera.zoom !== this._zoom) {
             if (approxZero(deltaZoom))
                 this._zoom = this._zoomEnd;
@@ -1827,13 +1886,21 @@ class CameraControls extends EventDispatcher {
             this._needsUpdate = true;
         }
         const updated = this._needsUpdate;
+        // console.log( this._needsUpdate, 'updated' );
+        // console.log( this._updatedLastTime, 'updatedLastTime' );
+        // 有东西修改 就会将 this._needsUpdate 设置为 true
+        // _updatedLastTime 是有东西还没更新完成，需要继续更新
         if (updated && !this._updatedLastTime) {
             this._hasRested = false;
+            // 当摄像机开始移动时
             this.dispatchEvent({ type: 'wake' });
+            // 当相机位置更新时
             this.dispatchEvent({ type: 'update' });
         }
         else if (updated) {
-            this.dispatchEvent({ type: 'update' });
+            // 当相机位置更新时
+            this.dispatchEvent({ type: 'update' }); // 当相机移动低于' .restThreshold '时
+            // 当相机移动低于' .restThreshold '时
             if (approxZero(deltaTheta, this.restThreshold) &&
                 approxZero(deltaPhi, this.restThreshold) &&
                 approxZero(deltaRadius, this.restThreshold) &&
@@ -1845,12 +1912,13 @@ class CameraControls extends EventDispatcher {
                 approxZero(deltaOffset.z, this.restThreshold) &&
                 approxZero(deltaZoom, this.restThreshold) &&
                 !this._hasRested) {
+                console.log('rest', this._hasRested);
                 this._hasRested = true;
                 this.dispatchEvent({ type: 'rest' });
             }
         }
         else if (!updated && this._updatedLastTime) {
-            this.dispatchEvent({ type: 'sleep' });
+            this.dispatchEvent({ type: 'sleep' }); // 当相机结束移动
         }
         this._updatedLastTime = updated;
         this._needsUpdate = false;
@@ -1992,15 +2060,18 @@ class CameraControls extends EventDispatcher {
             this._nearPlaneCorners[3].set(left, bottom, 0);
         }
     }
-    // lateUpdate
+    // lateUpdate 后期更新
+    // 相机碰撞物体的功能
     _collisionTest() {
         let distance = Infinity;
         const hasCollider = this.colliderMeshes.length >= 1;
+        // colliderMeshs 有值就执行，没值就直接返回
         if (!hasCollider)
             return distance;
         if (notSupportedInOrthographicCamera(this._camera, '_collisionTest'))
             return distance;
         // divide by distance to normalize, lighter than `Vector3.prototype.normalize()`
+        // 除以距离来规范化，比`Vector3.prototype.normalize()`更轻量
         const direction = _v3A.setFromSpherical(this._spherical).divideScalar(this._spherical.radius);
         _rotationMatrix.lookAt(_ORIGIN, direction, this._camera.up);
         for (let i = 0; i < 4; i++) {

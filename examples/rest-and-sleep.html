@@ -13,11 +13,16 @@
 	<button type="button" onclick="cameraControls.rotateTo( THREE.MathUtils.randFloat( 0, 2 * Math.PI ), THREE.MathUtils.randFloat( 0, Math.PI ), true )">Rotate</button>
 	<button onclick="cameraControls.lerpLookAt( -2, 0, 0, 1, 1, 0, 0, 2, 5, -1, 0, 0, Math.random(), true )">Move</button>
 	<p>These buttons will be disabled whenever a transition is occuring and then re-enabled when the transition is complete.</p>
+	<p>这些按钮将在转换发生时禁用，然后在转换完成时重新启用</p>
 	<button id="restEventBtn">Enable on Rest</button><br>
 	<button id="sleepEventBtn">Enable on Sleep</button>
-	<p>The rest event will fire when the camera slows to less than <code>controls.restThreshold</code> units in a single frame. You can set this value here</p> 	<label><input oninput="cameraControls.restThreshold = this.value" value="0.01" type="number" min="0.001" max="1" step="0.001"> Rest Threshold</label>
+	<p>The rest event will fire when the camera slows to less than <code>controls.restThreshold</code> units in a single frame. You can set this value here</p>
+	<p>当相机减慢到低于“控制”时，rest事件将触发。restThreshold”单元在单个帧中。你可以在这里设置这个值</p> 	
+	<label><input oninput="cameraControls.restThreshold = this.value" value="0.01" type="number" min="0.001" max="1" step="0.001"> Rest Threshold</label>
+	<label><input oninput="cameraControls.restThreshold = this.value" value="0.01" type="number" min="0.001" max="1" step="0.001"> Rest Threshold</label>
 
 	<p></p> The sleep event will fire once the camera completely stops. Due to damping, this is often long after it <em>appears</em> to have stopped.</p>
+	<p>睡眠事件将在相机完全停止时触发。由于阻尼，这通常是在它看起来已经停止很久之后</p>
 
 </div>
 

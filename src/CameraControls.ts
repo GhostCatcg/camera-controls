@@ -286,7 +286,9 @@ export class CameraControls extends EventDispatcher {
 
 	/**
 	 * An array of Meshes to collide with camera.  
+	 * 一个网格阵列与相机碰撞。
 	 * Be aware colliderMeshes may decrease performance. The collision test uses 4 raycasters from the camera since the near plane has 4 corners.
+	 * 注意collidermesh可能会降低性能。碰撞测试使用摄像机的4个光线投射器，因为近平面有4个角。
 	 * @category Properties
 	 */
 	colliderMeshes: _THREE.Object3D[] = [];
@@ -333,7 +335,7 @@ export class CameraControls extends EventDispatcher {
 	 * @category Methods
 	 */
 	// cancel will be overwritten in the constructor.
-	cancel: () => void = () => {};
+	cancel: () => void = () => { };
 
 	protected _enabled = true;
 	protected _camera: _THREE.PerspectiveCamera | _THREE.OrthographicCamera;
@@ -368,7 +370,7 @@ export class CameraControls extends EventDispatcher {
 	protected _dollyControlCoord: _THREE.Vector2;
 
 	// collisionTest uses nearPlane. ( PerspectiveCamera only )
-	protected _nearPlaneCorners: [ _THREE.Vector3, _THREE.Vector3, _THREE.Vector3, _THREE.Vector3 ];
+	protected _nearPlaneCorners: [_THREE.Vector3, _THREE.Vector3, _THREE.Vector3, _THREE.Vector3];
 
 	protected _hasRested = true;
 
@@ -401,9 +403,17 @@ export class CameraControls extends EventDispatcher {
 	constructor(
 		camera: _THREE.PerspectiveCamera | _THREE.OrthographicCamera,
 		domElement: HTMLElement,
+		scene?: _THREE.Scene,
 	) {
 
 		super();
+
+		if ( scene ) {
+
+			const axesHelper = new THREE.AxesHelper( 5 );
+			scene.add( axesHelper );
+
+		}
 
 		// Check if the user has installed THREE
 		if ( typeof THREE === 'undefined' ) {
@@ -430,8 +440,25 @@ export class CameraControls extends EventDispatcher {
 		this._focalOffsetEnd = this._focalOffset.clone();
 
 		// rotation
+		// _spherical 球坐标 使用了相机的坐标还有 y 朝上的功能
 		this._spherical = new THREE.Spherical().setFromVector3( _v3A.copy( this._camera.position ).applyQuaternion( this._yAxisUpSpace ) );
 		this._sphericalEnd = this._spherical.clone();
+
+		console.log( this._spherical, "spherical" );
+		console.log( this._sphericalEnd, 'sphericalEnd' );
+
+		if ( scene ) {
+
+			// const sphere = new Mesh(this._spherical)
+			// const sphere = new Mesh(this._spherical)
+
+			const sphere = new THREE.Mesh( new THREE.SphereGeometry( this._spherical.radius, 5, 5 ),
+				new THREE.MeshBasicMaterial( { color: 0xffff00, wireframe: true } ) );
+
+			scene.add( sphere );
+			// scene.add( this._sphericalEnd );
+
+		}
 
 		this._zoom = this._camera.zoom;
 		this._zoomEnd = this._zoom;
@@ -448,7 +475,7 @@ export class CameraControls extends EventDispatcher {
 		// Target cannot move outside of this box
 		this._boundary = new THREE.Box3(
 			new THREE.Vector3( - Infinity, - Infinity, - Infinity ),
-			new THREE.Vector3(   Infinity,   Infinity,   Infinity ),
+			new THREE.Vector3( Infinity, Infinity, Infinity ),
 		);
 
 		// reset
@@ -466,7 +493,7 @@ export class CameraControls extends EventDispatcher {
 			middle: ACTION.DOLLY,
 			right: ACTION.TRUCK,
 			wheel:
-				isPerspectiveCamera( this._camera )  ? ACTION.DOLLY :
+				isPerspectiveCamera( this._camera ) ? ACTION.DOLLY :
 				isOrthographicCamera( this._camera ) ? ACTION.ZOOM :
 				ACTION.NONE,
 		};
@@ -474,7 +501,7 @@ export class CameraControls extends EventDispatcher {
 		this.touches = {
 			one: ACTION.TOUCH_ROTATE,
 			two:
-				isPerspectiveCamera( this._camera )  ? ACTION.TOUCH_DOLLY_TRUCK :
+				isPerspectiveCamera( this._camera ) ? ACTION.TOUCH_DOLLY_TRUCK :
 				isOrthographicCamera( this._camera ) ? ACTION.TOUCH_ZOOM_TRUCK :
 				ACTION.NONE,
 			three: ACTION.TOUCH_TRUCK,
@@ -539,7 +566,7 @@ export class CameraControls extends EventDispatcher {
 
 			};
 
-			const onTouchStart = ( event:TouchEvent ): void => {
+			const onTouchStart = ( event: TouchEvent ): void => {
 
 				if ( ! this._enabled ) return;
 
@@ -803,7 +830,7 @@ export class CameraControls extends EventDispatcher {
 				// Ref: https://github.com/cedricpinson/osgjs/blob/00e5a7e9d9206c06fdde0436e1d62ab7cb5ce853/sources/osgViewer/input/source/InputSourceMouse.js#L89-L103
 				const deltaYFactor = isMac ? - 1 : - 3;
 				const delta = ( event.deltaMode === 1 ) ? event.deltaY / deltaYFactor : event.deltaY / ( deltaYFactor * 10 );
-				const x = this.dollyToCursor ? ( event.clientX - this._elementRect.x ) / this._elementRect.width  *   2 - 1 : 0;
+				const x = this.dollyToCursor ? ( event.clientX - this._elementRect.x ) / this._elementRect.width * 2 - 1 : 0;
 				const y = this.dollyToCursor ? ( event.clientY - this._elementRect.y ) / this._elementRect.height * - 2 + 1 : 0;
 
 				switch ( this.mouseButtons.wheel ) {
@@ -968,7 +995,7 @@ export class CameraControls extends EventDispatcher {
 					( this._state & ACTION.ZOOM ) === ACTION.ZOOM
 				) {
 
-					const dollyX = this.dollyToCursor ? ( dragStartPosition.x - this._elementRect.x ) / this._elementRect.width  *   2 - 1 : 0;
+					const dollyX = this.dollyToCursor ? ( dragStartPosition.x - this._elementRect.x ) / this._elementRect.width * 2 - 1 : 0;
 					const dollyY = this.dollyToCursor ? ( dragStartPosition.y - this._elementRect.y ) / this._elementRect.height * - 2 + 1 : 0;
 					this._state === ACTION.DOLLY ?
 						this._dollyInternal( deltaY * TOUCH_DOLLY_FACTOR, dollyX, dollyY ) :
@@ -993,13 +1020,13 @@ export class CameraControls extends EventDispatcher {
 					const dollyDelta = dollyStart.y - distance;
 					dollyStart.set( 0, distance );
 
-					const dollyX = this.dollyToCursor ? ( lastDragPosition.x - this._elementRect.x ) / this._elementRect.width  *   2 - 1 : 0;
+					const dollyX = this.dollyToCursor ? ( lastDragPosition.x - this._elementRect.x ) / this._elementRect.width * 2 - 1 : 0;
 					const dollyY = this.dollyToCursor ? ( lastDragPosition.y - this._elementRect.y ) / this._elementRect.height * - 2 + 1 : 0;
 
 					this._state === ACTION.TOUCH_DOLLY ||
-					this._state === ACTION.TOUCH_DOLLY_ROTATE ||
-					this._state === ACTION.TOUCH_DOLLY_TRUCK ||
-					this._state === ACTION.TOUCH_DOLLY_OFFSET ?
+						this._state === ACTION.TOUCH_DOLLY_ROTATE ||
+						this._state === ACTION.TOUCH_DOLLY_TRUCK ||
+						this._state === ACTION.TOUCH_DOLLY_OFFSET ?
 						this._dollyInternal( dollyDelta * TOUCH_DOLLY_FACTOR, dollyX, dollyY ) :
 						this._zoomInternal( dollyDelta * TOUCH_DOLLY_FACTOR, dollyX, dollyY );
 
@@ -1275,8 +1302,12 @@ export class CameraControls extends EventDispatcher {
 	 * | `'sleep'`           | When the camera end moving. |
 	 *
 	 * 1. `mouseButtons.wheel` (Mouse wheel control) does not emit `'controlstart'` and `'controlend'`. `mouseButtons.wheel` uses scroll-event internally, and scroll-event happens intermittently. That means "start" and "end" cannot be detected.
+	 * 1. `mouseButtons.wheel`(鼠标滚轮控制)不会触发`controlstart`和`controlend`,
+	 *    `mouseButtons.Wheel` 内部使用滚动事件，并且滚动事件间歇性发生。这意味着“开始”和“结束”不能被检测到。
 	 * 2. Due to damping, `sleep` will usually fire a few seconds after the camera _appears_ to have stopped moving. If you want to do something (e.g. enable UI, perform another transition) at the point when the camera has stopped, you probably want the `rest` event. This can be fine tuned using the `.restThreshold` parameter. See the [Rest and Sleep Example](https://yomotsu.github.io/camera-controls/examples/rest-and-sleep.html).
-	 *
+	 *    由于阻尼，`sleep`通常会在相机看起来停止移动几秒钟后启动，如果你想在相机停止时做一些事情(例如启用UI，执行另一个过渡)，
+	 *    你可能需要`rest`事件。可以使用`进行微调。restThreshold”参数。
+	 *    参见[休息和睡眠示例](https://yomotsu.github.io/camera-controls/examples/rest-and-sleep.html)。
 	 * e.g.
 	 * ```
 	 * cameraControl.addEventListener( 'controlstart', myCallbackFunction );
@@ -1287,7 +1318,7 @@ export class CameraControls extends EventDispatcher {
 	 */
 	addEventListener<K extends keyof CameraControlsEventMap>(
 		type: K,
-		listener: ( event: CameraControlsEventMap[ K ] ) => any,
+		listener: ( event: CameraControlsEventMap[K] ) => any,
 	): void {
 
 		super.addEventListener( type, listener as Listener );
@@ -1306,7 +1337,7 @@ export class CameraControls extends EventDispatcher {
 	 */
 	removeEventListener<K extends keyof CameraControlsEventMap>(
 		type: K,
-		listener: ( event: CameraControlsEventMap[ K ] ) => any,
+		listener: ( event: CameraControlsEventMap[K] ) => any,
 	): void {
 
 		super.removeEventListener( type, listener as Listener );
@@ -1325,7 +1356,7 @@ export class CameraControls extends EventDispatcher {
 
 		return this.rotateTo(
 			this._sphericalEnd.theta + azimuthAngle,
-			this._sphericalEnd.phi   + polarAngle,
+			this._sphericalEnd.phi + polarAngle,
 			enableTransition,
 		);
 
@@ -1414,10 +1445,10 @@ export class CameraControls extends EventDispatcher {
 	rotateTo( azimuthAngle: number, polarAngle: number, enableTransition: boolean = false ): Promise<void> {
 
 		const theta = THREE.MathUtils.clamp( azimuthAngle, this.minAzimuthAngle, this.maxAzimuthAngle );
-		const phi   = THREE.MathUtils.clamp( polarAngle,   this.minPolarAngle,   this.maxPolarAngle );
+		const phi = THREE.MathUtils.clamp( polarAngle, this.minPolarAngle, this.maxPolarAngle );
 
 		this._sphericalEnd.theta = theta;
-		this._sphericalEnd.phi   = phi;
+		this._sphericalEnd.phi = phi;
 		this._sphericalEnd.makeSafe();
 
 		this._needsUpdate = true;
@@ -1425,7 +1456,7 @@ export class CameraControls extends EventDispatcher {
 		if ( ! enableTransition ) {
 
 			this._spherical.theta = this._sphericalEnd.theta;
-			this._spherical.phi   = this._sphericalEnd.phi;
+			this._spherical.phi = this._sphericalEnd.phi;
 
 		}
 
@@ -1484,7 +1515,7 @@ export class CameraControls extends EventDispatcher {
 
 		}
 
-		const resolveImmediately =  ! enableTransition || approxEquals( this._spherical.radius, this._sphericalEnd.radius, this.restThreshold );
+		const resolveImmediately = ! enableTransition || approxEquals( this._spherical.radius, this._sphericalEnd.radius, this.restThreshold );
 		return this._createOnRestPromise( resolveImmediately );
 
 	}
@@ -1549,7 +1580,7 @@ export class CameraControls extends EventDispatcher {
 
 		_xColumn.setFromMatrixColumn( this._camera.matrix, 0 );
 		_yColumn.setFromMatrixColumn( this._camera.matrix, 1 );
-		_xColumn.multiplyScalar(   x );
+		_xColumn.multiplyScalar( x );
 		_yColumn.multiplyScalar( - y );
 
 		const offset = _v3A.copy( _xColumn ).add( _yColumn );
@@ -1630,7 +1661,7 @@ export class CameraControls extends EventDispatcher {
 			? _box3A.copy( box3OrObject as _THREE.Box3 )
 			: _box3A.setFromObject( box3OrObject as _THREE.Object3D );
 
-		if ( aabb.isEmpty() )  {
+		if ( aabb.isEmpty() ) {
 
 			console.warn( 'camera-controls: fitTo() cannot be used with an empty box. Aborting' );
 			Promise.resolve();
@@ -1639,7 +1670,7 @@ export class CameraControls extends EventDispatcher {
 
 		// round to closest axis ( forward | backward | right | left | top | bottom )
 		const theta = roundToStep( this._sphericalEnd.theta, PI_HALF );
-		const phi   = roundToStep( this._sphericalEnd.phi,   PI_HALF );
+		const phi = roundToStep( this._sphericalEnd.phi, PI_HALF );
 
 		promises.push( this.rotateTo( theta, phi, enableTransition ) );
 
@@ -1854,14 +1885,14 @@ export class CameraControls extends EventDispatcher {
 
 		this._targetEnd.copy( targetA.lerp( targetB, t ) ); // tricky
 
-		const deltaTheta  = _sphericalB.theta  - _sphericalA.theta;
-		const deltaPhi    = _sphericalB.phi    - _sphericalA.phi;
+		const deltaTheta = _sphericalB.theta - _sphericalA.theta;
+		const deltaPhi = _sphericalB.phi - _sphericalA.phi;
 		const deltaRadius = _sphericalB.radius - _sphericalA.radius;
 
 		this._sphericalEnd.set(
 			_sphericalA.radius + deltaRadius * t,
-			_sphericalA.phi    + deltaPhi    * t,
-			_sphericalA.theta  + deltaTheta  * t,
+			_sphericalA.phi + deltaPhi * t,
+			_sphericalA.theta + deltaTheta * t,
 		);
 
 		this.normalizeRotations();
@@ -1958,7 +1989,7 @@ export class CameraControls extends EventDispatcher {
 	 * @param targetZ
 	 * @category Methods
 	 */
-	setOrbitPoint( targetX: number, targetY: number, targetZ : number ) {
+	setOrbitPoint( targetX: number, targetY: number, targetZ: number ) {
 
 		this._camera.updateMatrixWorld();
 		_xColumn.setFromMatrixColumn( this._camera.matrixWorldInverse, 0 );
@@ -1991,7 +2022,7 @@ export class CameraControls extends EventDispatcher {
 		if ( ! box3 ) {
 
 			this._boundary.min.set( - Infinity, - Infinity, - Infinity );
-			this._boundary.max.set(   Infinity,   Infinity,   Infinity );
+			this._boundary.max.set( Infinity, Infinity, Infinity );
 			this._needsUpdate = true;
 
 			return;
@@ -2184,23 +2215,56 @@ export class CameraControls extends EventDispatcher {
 	 */
 	update( delta: number ): boolean {
 
+		// this._state 当前鼠标处于哪个 ACTION 状态
 		const dampingFactor = this._state === ACTION.NONE ? this.dampingFactor : this.draggingDampingFactor;
+
+		// console.log( this.dampingFactor, '阻尼惯性' );
+		// console.log( this.draggingDampingFactor, '拖拽阻尼惯性' );
+		// console.log( '最后的阻尼惯性：dampingFactor', dampingFactor );
+
 		// The original THREE.OrbitControls assume 60 FPS fixed and does NOT rely on delta time.
 		// (that must be a problem of the original one though)
 		// To to emulate the speed of the original one under 60 FPS, multiply `60` to delta,
 		// but ours are more flexible to any FPS unlike the original.
-		const lerpRatio = Math.min( dampingFactor * delta * 60, 1 );
+		// 原来的三个。OrbitControls假定60 FPS固定，不依赖增量时间。
+		// (这肯定是原始版本的问题)
+		// 为了模拟原始帧在60fps下的速度，将' 60 '乘以delta，
+		// 但是我们的FPS比原版更灵活。
 
-		const deltaTheta  = this._sphericalEnd.theta  - this._spherical.theta;
-		const deltaPhi    = this._sphericalEnd.phi    - this._spherical.phi;
+		// lerpRatio 差值必须小于1
+		const lerpRatio = Math.min( dampingFactor * delta * 60, 1 );
+		// console.log( lerpRatio, 'lerpRatio' );
+		// console.log( dampingFactor, 'dampingFactor' );
+		// console.log( delta, 'delta' );
+
+
+		// _spherical 球坐标公式
+		// _sphericalEnd 球坐标公式
+		// 为什么有两个球坐标公式？
+
+		// theta 差值
+		// phi 差值
+
+		const deltaTheta = this._sphericalEnd.theta - this._spherical.theta;
+		const deltaPhi = this._sphericalEnd.phi - this._spherical.phi;
+
+		// radius 差值
 		const deltaRadius = this._sphericalEnd.radius - this._spherical.radius;
+
+		// console.log( deltaTheta, 'deltaTheta' );
+		// console.log( deltaPhi, 'deltaPhi' );
+		// console.log( deltaRadius, 'deltaRadius' );
+
+		// 两个向量相减 感觉这里有问题！
 		const deltaTarget = _deltaTarget.subVectors( this._targetEnd, this._target );
 		const deltaOffset = _deltaOffset.subVectors( this._focalOffsetEnd, this._focalOffset );
 
+		// approxZero 判断数据是否小于极限 1乘以10的负5次幂。就是0.00001
+		// 意思是针对上一帧，相机是否被修改
 		if (
-			! approxZero( deltaTheta    ) ||
-			! approxZero( deltaPhi      ) ||
-			! approxZero( deltaRadius   ) ||
+			! approxZero( deltaTheta ) ||
+			! approxZero( deltaPhi ) ||
+			! approxZero( deltaRadius ) ||
 			! approxZero( deltaTarget.x ) ||
 			! approxZero( deltaTarget.y ) ||
 			! approxZero( deltaTarget.z ) ||
@@ -2209,10 +2273,12 @@ export class CameraControls extends EventDispatcher {
 			! approxZero( deltaOffset.z )
 		) {
 
+			// console.log( '被修改' );
+
 			this._spherical.set(
 				this._spherical.radius + deltaRadius * lerpRatio,
-				this._spherical.phi    + deltaPhi    * lerpRatio,
-				this._spherical.theta  + deltaTheta  * lerpRatio,
+				this._spherical.phi + deltaPhi * lerpRatio,
+				this._spherical.theta + deltaTheta * lerpRatio,
 			);
 
 			this._target.add( deltaTarget.multiplyScalar( lerpRatio ) );
@@ -2222,13 +2288,18 @@ export class CameraControls extends EventDispatcher {
 
 		} else {
 
+			// console.log( '未被修改' );
+
 			this._spherical.copy( this._sphericalEnd );
 			this._target.copy( this._targetEnd );
 			this._focalOffset.copy( this._focalOffsetEnd );
 
 		}
 
+		// console.log( this._dollyControlAmount, '控制量：this._dollyControlAmount' );
+		// 滚鼠标可能会触发这个方法 还不知道这个是啥意思
 		if ( this._dollyControlAmount !== 0 ) {
+
 
 			if ( isPerspectiveCamera( this._camera ) ) {
 
@@ -2277,35 +2348,46 @@ export class CameraControls extends EventDispatcher {
 
 		}
 
-		const maxDistance = this._collisionTest();
+		// 主要用来做相机碰撞物体的功能，详看 collision 案例，对其他功能不影响，可先不管
+		// 如果相机的位置有东西，则修改半径，让相机避开次物体
+		const maxDistance = this._collisionTest(); // Infinity
+
 		this._spherical.radius = Math.min( this._spherical.radius, maxDistance );
 
 		// decompose spherical to the camera position
-		this._spherical.makeSafe();
+		// 分解球形 给到 相机位置
+
+		this._spherical.makeSafe(); // 将极角 phi 的值限制在0.000001 和 π - 0.000001 之间
+
+		// setFromSpherical 从球坐标s中设置该向量。球坐标系(r，θ，baiφ)与直角坐标系(x，y，z)的转换关系du：x=rsinθcosφ；y=rsinθsinφ；z=rcosθ。
 		this._camera.position.setFromSpherical( this._spherical ).applyQuaternion( this._yAxisUpSpaceInverse ).add( this._target );
 		this._camera.lookAt( this._target );
 
 		// set offset after the orbit movement
+		// 设置偏移后的轨道运动
 		const affectOffset =
 			! approxZero( this._focalOffset.x ) ||
 			! approxZero( this._focalOffset.y ) ||
 			! approxZero( this._focalOffset.z );
 
+		// 如果 focalOffset 有问题，才会走下面的方法
 		if ( affectOffset ) {
 
 			this._camera.updateMatrix();
 			_xColumn.setFromMatrixColumn( this._camera.matrix, 0 );
 			_yColumn.setFromMatrixColumn( this._camera.matrix, 1 );
 			_zColumn.setFromMatrixColumn( this._camera.matrix, 2 );
-			_xColumn.multiplyScalar(   this._focalOffset.x );
+			_xColumn.multiplyScalar( this._focalOffset.x );
 			_yColumn.multiplyScalar( - this._focalOffset.y );
-			_zColumn.multiplyScalar(   this._focalOffset.z ); // notice: z-offset will not affect in Orthographic.
+			_zColumn.multiplyScalar( this._focalOffset.z ); // notice: z-offset will not affect in Orthographic.
 
 			_v3A.copy( _xColumn ).add( _yColumn ).add( _zColumn );
 			this._camera.position.add( _v3A );
 
 		}
 
+		// 边界包围相机   moveTo 方法在使用
+		// 将相机也封闭在边界内   boundary.html 案例
 		if ( this._boundaryEnclosesCamera ) {
 
 			this._encloseToBoundary(
@@ -2319,7 +2401,7 @@ export class CameraControls extends EventDispatcher {
 		// zoom
 		const deltaZoom = this._zoomEnd - this._zoom;
 		this._zoom += deltaZoom * lerpRatio;
-
+		// 查看zoom是否被修改, deltaZoom, 暂时没有需求修改zoom
 		if ( this._camera.zoom !== this._zoom ) {
 
 			if ( approxZero( deltaZoom ) ) this._zoom = this._zoomEnd;
@@ -2333,17 +2415,25 @@ export class CameraControls extends EventDispatcher {
 		}
 
 		const updated = this._needsUpdate;
+		// console.log( this._needsUpdate, 'updated' );
+		// console.log( this._updatedLastTime, 'updatedLastTime' );
 
+		// 有东西修改 就会将 this._needsUpdate 设置为 true
+		// _updatedLastTime 是有东西还没更新完成，需要继续更新
 		if ( updated && ! this._updatedLastTime ) {
 
 			this._hasRested = false;
+			// 当摄像机开始移动时
 			this.dispatchEvent( { type: 'wake' } );
+			// 当相机位置更新时
 			this.dispatchEvent( { type: 'update' } );
 
 		} else if ( updated ) {
 
-			this.dispatchEvent( { type: 'update' } );
+			// 当相机位置更新时
+			this.dispatchEvent( { type: 'update' } ); // 当相机移动低于' .restThreshold '时
 
+			// 当相机移动低于' .restThreshold '时
 			if (
 				approxZero( deltaTheta, this.restThreshold ) &&
 				approxZero( deltaPhi, this.restThreshold ) &&
@@ -2358,6 +2448,7 @@ export class CameraControls extends EventDispatcher {
 				! this._hasRested
 			) {
 
+				console.log( 'rest', this._hasRested );
 				this._hasRested = true;
 				this.dispatchEvent( { type: 'rest' } );
 
@@ -2365,7 +2456,8 @@ export class CameraControls extends EventDispatcher {
 
 		} else if ( ! updated && this._updatedLastTime ) {
 
-			this.dispatchEvent( { type: 'sleep' } );
+			this.dispatchEvent( { type: 'sleep' } ); // 当相机结束移动
+
 
 		}
 
@@ -2382,32 +2474,32 @@ export class CameraControls extends EventDispatcher {
 	toJSON(): string {
 
 		return JSON.stringify( {
-			enabled              : this._enabled,
+			enabled: this._enabled,
 
-			minDistance          : this.minDistance,
-			maxDistance          : infinityToMaxNumber( this.maxDistance ),
-			minZoom              : this.minZoom,
-			maxZoom              : infinityToMaxNumber( this.maxZoom ),
-			minPolarAngle        : this.minPolarAngle,
-			maxPolarAngle        : infinityToMaxNumber( this.maxPolarAngle ),
-			minAzimuthAngle      : infinityToMaxNumber( this.minAzimuthAngle ),
-			maxAzimuthAngle      : infinityToMaxNumber( this.maxAzimuthAngle ),
-			dampingFactor        : this.dampingFactor,
+			minDistance: this.minDistance,
+			maxDistance: infinityToMaxNumber( this.maxDistance ),
+			minZoom: this.minZoom,
+			maxZoom: infinityToMaxNumber( this.maxZoom ),
+			minPolarAngle: this.minPolarAngle,
+			maxPolarAngle: infinityToMaxNumber( this.maxPolarAngle ),
+			minAzimuthAngle: infinityToMaxNumber( this.minAzimuthAngle ),
+			maxAzimuthAngle: infinityToMaxNumber( this.maxAzimuthAngle ),
+			dampingFactor: this.dampingFactor,
 			draggingDampingFactor: this.draggingDampingFactor,
-			dollySpeed           : this.dollySpeed,
-			truckSpeed           : this.truckSpeed,
-			dollyToCursor        : this.dollyToCursor,
+			dollySpeed: this.dollySpeed,
+			truckSpeed: this.truckSpeed,
+			dollyToCursor: this.dollyToCursor,
 			verticalDragToForward: this.verticalDragToForward,
 
-			target               : this._targetEnd.toArray(),
-			position             : _v3A.setFromSpherical( this._sphericalEnd ).add( this._targetEnd ).toArray(),
-			zoom                 : this._zoomEnd,
-			focalOffset          : this._focalOffsetEnd.toArray(),
+			target: this._targetEnd.toArray(),
+			position: _v3A.setFromSpherical( this._sphericalEnd ).add( this._targetEnd ).toArray(),
+			zoom: this._zoomEnd,
+			focalOffset: this._focalOffsetEnd.toArray(),
 
-			target0              : this._target0.toArray(),
-			position0            : this._position0.toArray(),
-			zoom0                : this._zoom0,
-			focalOffset0         : this._focalOffset0.toArray(),
+			target0: this._target0.toArray(),
+			position0: this._position0.toArray(),
+			zoom0: this._zoom0,
+			focalOffset0: this._focalOffset0.toArray(),
 
 		} );
 
@@ -2424,21 +2516,21 @@ export class CameraControls extends EventDispatcher {
 		const obj = JSON.parse( json );
 		const position = _v3A.fromArray( obj.position );
 
-		this.enabled               = obj.enabled;
+		this.enabled = obj.enabled;
 
-		this.minDistance           = obj.minDistance;
-		this.maxDistance           = maxNumberToInfinity( obj.maxDistance );
-		this.minZoom               = obj.minZoom;
-		this.maxZoom               = maxNumberToInfinity( obj.maxZoom );
-		this.minPolarAngle         = obj.minPolarAngle;
-		this.maxPolarAngle         = maxNumberToInfinity( obj.maxPolarAngle );
-		this.minAzimuthAngle       = maxNumberToInfinity( obj.minAzimuthAngle );
-		this.maxAzimuthAngle       = maxNumberToInfinity( obj.maxAzimuthAngle );
-		this.dampingFactor         = obj.dampingFactor;
+		this.minDistance = obj.minDistance;
+		this.maxDistance = maxNumberToInfinity( obj.maxDistance );
+		this.minZoom = obj.minZoom;
+		this.maxZoom = maxNumberToInfinity( obj.maxZoom );
+		this.minPolarAngle = obj.minPolarAngle;
+		this.maxPolarAngle = maxNumberToInfinity( obj.maxPolarAngle );
+		this.minAzimuthAngle = maxNumberToInfinity( obj.minAzimuthAngle );
+		this.maxAzimuthAngle = maxNumberToInfinity( obj.maxAzimuthAngle );
+		this.dampingFactor = obj.dampingFactor;
 		this.draggingDampingFactor = obj.draggingDampingFactor;
-		this.dollySpeed            = obj.dollySpeed;
-		this.truckSpeed            = obj.truckSpeed;
-		this.dollyToCursor         = obj.dollyToCursor;
+		this.dollySpeed = obj.dollySpeed;
+		this.truckSpeed = obj.truckSpeed;
+		this.dollyToCursor = obj.dollyToCursor;
 		this.verticalDragToForward = obj.verticalDragToForward;
 
 		this._target0.fromArray( obj.target0 );
@@ -2529,7 +2621,7 @@ export class CameraControls extends EventDispatcher {
 
 	protected _updateNearPlaneCorners(): void {
 
-		if ( isPerspectiveCamera( this._camera ) )  {
+		if ( isPerspectiveCamera( this._camera ) ) {
 
 			const camera = this._camera;
 			const near = camera.near;
@@ -2537,23 +2629,23 @@ export class CameraControls extends EventDispatcher {
 			const heightHalf = Math.tan( fov * 0.5 ) * near; // near plain half height
 			const widthHalf = heightHalf * camera.aspect; // near plain half width
 			this._nearPlaneCorners[ 0 ].set( - widthHalf, - heightHalf, 0 );
-			this._nearPlaneCorners[ 1 ].set(   widthHalf, - heightHalf, 0 );
-			this._nearPlaneCorners[ 2 ].set(   widthHalf,   heightHalf, 0 );
-			this._nearPlaneCorners[ 3 ].set( - widthHalf,   heightHalf, 0 );
+			this._nearPlaneCorners[ 1 ].set( widthHalf, - heightHalf, 0 );
+			this._nearPlaneCorners[ 2 ].set( widthHalf, heightHalf, 0 );
+			this._nearPlaneCorners[ 3 ].set( - widthHalf, heightHalf, 0 );
 
 		} else if ( isOrthographicCamera( this._camera ) ) {
 
 			const camera = this._camera;
 			const zoomInv = 1 / camera.zoom;
-			const left   = camera.left   * zoomInv;
-			const right  = camera.right  * zoomInv;
-			const top    = camera.top    * zoomInv;
+			const left = camera.left * zoomInv;
+			const right = camera.right * zoomInv;
+			const top = camera.top * zoomInv;
 			const bottom = camera.bottom * zoomInv;
 
-			this._nearPlaneCorners[ 0 ].set( left,  top,    0 );
-			this._nearPlaneCorners[ 1 ].set( right, top,    0 );
+			this._nearPlaneCorners[ 0 ].set( left, top, 0 );
+			this._nearPlaneCorners[ 1 ].set( right, top, 0 );
 			this._nearPlaneCorners[ 2 ].set( right, bottom, 0 );
-			this._nearPlaneCorners[ 3 ].set( left,  bottom, 0 );
+			this._nearPlaneCorners[ 3 ].set( left, bottom, 0 );
 
 		}
 
@@ -2567,7 +2659,7 @@ export class CameraControls extends EventDispatcher {
 			// half of the fov is center to top of screen
 			const fov = this._camera.getEffectiveFOV() * THREE.MathUtils.DEG2RAD;
 			const targetDistance = offset.length() * Math.tan( fov * 0.5 );
-			const truckX    = ( this.truckSpeed * deltaX * targetDistance / this._elementRect.height );
+			const truckX = ( this.truckSpeed * deltaX * targetDistance / this._elementRect.height );
 			const pedestalY = ( this.truckSpeed * deltaY * targetDistance / this._elementRect.height );
 			if ( this.verticalDragToForward ) {
 
@@ -2598,8 +2690,8 @@ export class CameraControls extends EventDispatcher {
 
 			// orthographic
 			const camera = this._camera;
-			const truckX    = deltaX * ( camera.right - camera.left   ) / camera.zoom / this._elementRect.width;
-			const pedestalY = deltaY * ( camera.top   - camera.bottom ) / camera.zoom / this._elementRect.height;
+			const truckX = deltaX * ( camera.right - camera.left ) / camera.zoom / this._elementRect.width;
+			const pedestalY = deltaY * ( camera.top - camera.bottom ) / camera.zoom / this._elementRect.height;
 			dragToOffset ?
 				this.setFocalOffset( this._focalOffsetEnd.x + truckX, this._focalOffsetEnd.y + pedestalY, this._focalOffsetEnd.z, true ) :
 				this.truck( truckX, pedestalY, true );
@@ -2611,12 +2703,12 @@ export class CameraControls extends EventDispatcher {
 	protected _rotateInternal = ( deltaX: number, deltaY: number ): void => {
 
 		const theta = PI_2 * this.azimuthRotateSpeed * deltaX / this._elementRect.height; // divide by *height* to refer the resolution
-		const phi   = PI_2 * this.polarRotateSpeed   * deltaY / this._elementRect.height;
+		const phi = PI_2 * this.polarRotateSpeed * deltaY / this._elementRect.height;
 		this.rotate( theta, phi, true );
 
 	};
 
-	protected _dollyInternal = ( delta: number, x: number, y : number ): void => {
+	protected _dollyInternal = ( delta: number, x: number, y: number ): void => {
 
 		const dollyScale = Math.pow( 0.95, - delta * this.dollySpeed );
 		const distance = this._sphericalEnd.radius * dollyScale;
@@ -2670,17 +2762,20 @@ export class CameraControls extends EventDispatcher {
 
 	};
 
-	// lateUpdate
+	// lateUpdate 后期更新
+	// 相机碰撞物体的功能
 	protected _collisionTest(): number {
 
 		let distance = Infinity;
 
 		const hasCollider = this.colliderMeshes.length >= 1;
+		// colliderMeshs 有值就执行，没值就直接返回
 		if ( ! hasCollider ) return distance;
 
 		if ( notSupportedInOrthographicCamera( this._camera, '_collisionTest' ) ) return distance;
 
 		// divide by distance to normalize, lighter than `Vector3.prototype.normalize()`
+		// 除以距离来规范化，比`Vector3.prototype.normalize()`更轻量
 		const direction = _v3A.setFromSpherical( this._spherical ).divideScalar( this._spherical.radius );
 
 		_rotationMatrix.lookAt( _ORIGIN, direction, this._camera.up );
@@ -2758,7 +2853,7 @@ export class CameraControls extends EventDispatcher {
 
 	}
 
-	protected _removeAllEventListeners(): void {}
+	protected _removeAllEventListeners(): void { }
 
 }
 

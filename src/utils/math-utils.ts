@@ -1,4 +1,4 @@
-const EPSILON = 1e-5;
+const EPSILON = 1e-5; // 极限 1乘以10的负5次幂。就是0.00001
 
 export function approxZero( number: number, error: number = EPSILON ): boolean {
 
