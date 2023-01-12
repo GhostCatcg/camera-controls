@@ -33,6 +33,8 @@ renderer.setSize( width, height );
 document.body.appendChild( renderer.domElement );
 
 const cameraControls = new CameraControls( camera, renderer.domElement );
+cameraControls.dampingFactor = 1
+cameraControls.draggingDampingFactor = 1
 
 const KEYCODE = {
 	W: 87,
@@ -73,6 +75,12 @@ const gridHelper = new THREE.GridHelper( 50, 50 );
 gridHelper.position.y = - 1;
 scene.add( gridHelper );
 
+
+// cameraControls.addEventListener('control', (e) => {
+// 	console.log("control")
+// 	cameraControls.update(0);
+// });
+
 renderer.render( scene, camera );
 
 ( function anim () {
@@ -86,7 +94,7 @@ renderer.render( scene, camera );
 	requestAnimationFrame( anim );
 
 	if ( updated ) {
-
+		// console.log(11)
 		renderer.render( scene, camera );
 		console.log( 'rendered' );
 

@@ -322,6 +322,7 @@ class CameraControls extends EventDispatcher {
         this.truckSpeed = 2.0;
         /**
          * `true` to enable Dolly-in to the mouse cursor coords.
+         * true启用 Dolly-in 到鼠标光标坐标。
          * @category Properties
          */
         this.dollyToCursor = false;
@@ -336,11 +337,13 @@ class CameraControls extends EventDispatcher {
         this.verticalDragToForward = false;
         /**
          * Friction ratio of the boundary.
+         * 边界的摩擦比
          * @category Properties
          */
         this.boundaryFriction = 0.0;
         /**
          * Controls how soon the `rest` event fires as the camera slows.
+         * 控制rest当相机变慢时事件触发的时间
          * @category Properties
          */
         this.restThreshold = 0.01;
@@ -449,7 +452,8 @@ class CameraControls extends EventDispatcher {
         this._domElement.style.touchAction = 'none';
         this._domElement.style.userSelect = 'none';
         this._domElement.style.webkitUserSelect = 'none';
-        // the location
+        // the location 目标点位
+        // 为什么还需要一个end
         this._target = new THREE.Vector3();
         this._targetEnd = this._target.clone();
         this._focalOffset = new THREE.Vector3();
@@ -568,6 +572,7 @@ class CameraControls extends EventDispatcher {
                 startDragging(event);
             };
             const onPointerMove = (event) => {
+                console.log('鼠标移动');
                 if (event.cancelable)
                     event.preventDefault();
                 const pointerId = event.pointerId;
@@ -1471,16 +1476,19 @@ class CameraControls extends EventDispatcher {
      * @category Methods
      */
     setLookAt(positionX, positionY, positionZ, targetX, targetY, targetZ, enableTransition = false) {
+        console.log('setLookAt');
         const target = _v3B.set(targetX, targetY, targetZ);
         const position = _v3A.set(positionX, positionY, positionZ);
+        console.log(target, position);
         this._targetEnd.copy(target);
         this._sphericalEnd.setFromVector3(position.sub(target).applyQuaternion(this._yAxisUpSpace));
-        this.normalizeRotations();
+        // this.normalizeRotations();
         this._needsUpdate = true;
         if (!enableTransition) {
             this._target.copy(this._targetEnd);
             this._spherical.copy(this._sphericalEnd);
         }
+        // console.log( '约等于' );
         const resolveImmediately = !enableTransition ||
             approxEquals(this._target.x, this._targetEnd.x, this.restThreshold) &&
                 approxEquals(this._target.y, this._targetEnd.y, this.restThreshold) &&
@@ -1488,6 +1496,7 @@ class CameraControls extends EventDispatcher {
                 approxEquals(this._spherical.theta, this._sphericalEnd.theta, this.restThreshold) &&
                 approxEquals(this._spherical.phi, this._sphericalEnd.phi, this.restThreshold) &&
                 approxEquals(this._spherical.radius, this._sphericalEnd.radius, this.restThreshold);
+        console.log(resolveImmediately, '111');
         return this._createOnRestPromise(resolveImmediately);
     }
     /**
@@ -1780,11 +1789,11 @@ class CameraControls extends EventDispatcher {
         // console.log( deltaTheta, 'deltaTheta' );
         // console.log( deltaPhi, 'deltaPhi' );
         // console.log( deltaRadius, 'deltaRadius' );
-        // 两个向量相减 感觉这里有问题！
+        // 向量相减，查看 target 和 offset 是否被修改
         const deltaTarget = _deltaTarget.subVectors(this._targetEnd, this._target);
         const deltaOffset = _deltaOffset.subVectors(this._focalOffsetEnd, this._focalOffset);
         // approxZero 判断数据是否小于极限 1乘以10的负5次幂。就是0.00001
-        // 意思是针对上一帧，相机是否被修改
+        // 模型的过渡动画, 然后产生平滑的过渡
         if (!approxZero(deltaTheta) ||
             !approxZero(deltaPhi) ||
             !approxZero(deltaRadius) ||

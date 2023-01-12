@@ -168,6 +168,7 @@ export declare class CameraControls extends EventDispatcher {
     truckSpeed: number;
     /**
      * `true` to enable Dolly-in to the mouse cursor coords.
+     * true启用 Dolly-in 到鼠标光标坐标。
      * @category Properties
      */
     dollyToCursor: boolean;
@@ -182,11 +183,13 @@ export declare class CameraControls extends EventDispatcher {
     verticalDragToForward: boolean;
     /**
      * Friction ratio of the boundary.
+     * 边界的摩擦比
      * @category Properties
      */
     boundaryFriction: number;
     /**
      * Controls how soon the `rest` event fires as the camera slows.
+     * 控制rest当相机变慢时事件触发的时间
      * @category Properties
      */
     restThreshold: number;

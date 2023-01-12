@@ -126,21 +126,21 @@
 
 	async function transitionSequenceA() {
 
-		console.log("Starting sequence");
+		// console.log("Starting sequence");
 
-		console.log("Performing rotation");
-		await randomRotate();
+		// console.log("Performing rotation");
+		// await randomRotate();
 
-		console.log("Performing move");
-		await randomMove();
+		// console.log("Performing move");
+		// await randomMove();
 
 		console.log("Performing lookAt");
 		await lookAt();
 
-		console.log("Performing fitToBox");
-		await cameraControls.fitToBox( mesh, true, { paddingTop: 1, paddingLeft: 1, paddingBottom: 1, paddingRight: 1 } );
+		// console.log("Performing fitToBox");
+		// await cameraControls.fitToBox( mesh, true, { paddingTop: 1, paddingLeft: 1, paddingBottom: 1, paddingRight: 1 } );
 
-		console.log("Sequence complete");
+		// console.log("Sequence complete");
 		enableUI( true );
 
 	}
